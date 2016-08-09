@@ -1,0 +1,35 @@
+#!/usr/bin/php
+<?php
+//ob_implicit_flush(false);
+//error_reporting(0);
+
+$s_in = fopen('php://stdin', 'r');
+$s_out = fopen('php://stdout', 'w');
+
+require_once(dirname(__FILE__) . '/' . 'Suap.php');
+require_once(dirname(__FILE__) . '/' . 'Handler.php');
+require_once(dirname(__FILE__) . '/' . 'Main.php');
+
+//$ast = new Handler($s_in, $s_out);
+//ast->endConversation()
+// $suap = new Suap('123', 'asdasd#');
+//$diario = '7511';
+
+$matricula = '20141014050520';
+$senha = 'metron.550';
+$diario = '7525';
+
+$hand = new Handler($s_in, $s_out);
+
+//$temp = "grupo2/1&grupo2/disc";
+//$hand->execute_agi('STREAM FILE '.$temp.' ""');
+//$hand->execute_agi("EXEC BACKGROUND $temp");
+
+$suap = new Suap($matricula,$senha);
+$tools = ['suap'=>$suap, 'handler'=>$hand];
+
+$sit = new MenuBasic($tools);
+$disc = $sit->getInfo($matricula);
+
+$hand->log_agi('>>>'.$disc);
+?>

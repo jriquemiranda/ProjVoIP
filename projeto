@@ -1,0 +1,12 @@
+### ASTERISK  ###
+- Configuração
+/etc/asterisk
+- Sons
+/usr/share/asterisk/sounds/pt_BR
+- Agi
+/home/henrique/voip
+### APACHE  ###
+- Dados
+/var/www/html
+### POSTGRES ###
+postgres@pgadmin

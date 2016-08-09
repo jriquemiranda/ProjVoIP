@@ -1,0 +1,78 @@
+<?php
+//$time_start = microtime(true);
+require_once dirname(dirname(__FILE__)).DIRECTORY_SEPARATOR.'utils'.DIRECTORY_SEPARATOR.'php-html-parser'.DIRECTORY_SEPARATOR.'vendor'.DIRECTORY_SEPARATOR.'autoload.php';
+use PHPHtmlParser\Dom;
+
+//print_r(dirname(dirname(__FILE__)).DIRECTORY_SEPARATOR.'utils'.DIRECTORY_SEPARATOR.'php-html-parser'.DIRECTORY_SEPARATOR.'vendor'.DIRECTORY_SEPARATOR.'autoload.php');
+
+class MenuBasic
+{
+    private $suap;
+    private $handler;
+    public function __construct($tools)
+    {
+        $this->suap = $tools['suap'];
+        $this->handler = $tools['handler'];
+    }
+
+    public function parserInfo($html)
+    {
+        $diarios = array();
+        $codes = array();
+        $disciplinas = array();
+        $dom = new Dom();
+        $dom->load($html);
+        $contents = $dom->find('.borda');
+        $tt = $contents->find('tbody');
+        $new = $tt->find('tr');
+
+        foreach ($new as $key) {
+            $diario = $key->find('td')[0];
+            $diario = $diario->text;
+            $class = $key->find('td')[1];
+            $sit = $key->find('td')[6];
+            $situacao = $sit->text;
+
+            if ($situacao != 'Transferido' || $situacao != 'Cancelado') {
+                $convert = $class->text."\n";
+                $bora = explode(' - ', $convert, 2);
+                $teste = split('[/.-]', $bora[0]);
+                array_push($codes, $teste[1]);
+                array_push($disciplinas, $bora[1]);
+                array_push($diarios, $diario);
+            }
+        }
+        $coe = array_combine($codes, $disciplinas);
+        $max = range(1, count($diarios));
+        $new_diarios = array_combine($max, $diarios);
+        $newinfos = ['infos' => $coe, 'diarios' => $new_diarios];
+
+        return $newinfos;
+    }
+
+    public function getInfo($mat)
+    {
+        $get = $this->suap->consume('https://suap.ifrn.edu.br/edu/aluno/'.$mat.'/?tab=boletim');
+        $t = $this->parserInfo($get);
+        $make = $this->makeMenu($t['infos']);
+    }
+
+    public function makeMenu($info)
+    {
+        $max = count($info);
+        $i = 1;
+//        $this->handler->execute_agi('ANSWER');
+        foreach ($info as $key => $value) {
+            $this->handler->execute_agi("STREAM FILE grupo2/$i \"\"");
+            $this->handler->execute_agi('STREAM FILE grupo2/disc ""');
+            $this->handler->execute_agi("STREAM FILE grupo2/mat/$key \"\"");
+            if (++$i == $x) {
+                break;
+            }
+        }
+        $this->handler->execute_agi("STREAM FILE grupo2/0 \"\"");
+        $this->handler->execute_agi("STREAM FILE grupo2/final \"\"");
+//      $this->handler->execute_agi('HANGUP');
+    }
+}
+

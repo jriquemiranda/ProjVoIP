@@ -1,0 +1,29 @@
+#!/usr/bin/php
+<?php
+//ob_implicit_flush(false);
+//error_reporting(0);
+
+$s_in = fopen('php://stdin', 'r');
+$s_out = fopen('php://stdout', 'w');
+
+require_once(dirname(__FILE__) . '/' . 'Suap.php');
+require_once(dirname(__FILE__) . '/' . 'Handler.php');
+require_once(dirname(__FILE__) . '/' . 'Situacao.php');
+
+//$ast = new Handler($s_in, $s_out);
+//$ast->endConversation();
+//$suap = new Suap('123', 'asdasd#');
+//$resp = $suap->consume('https://suap.ifrn.edu.br/edu/aluno/20151014050006/?tab=boletim');
+
+//$matricula = '20132014050548';
+$matricula = '20141014050520';
+$diario = '7525';
+
+$hand = new Handler ($s_in, $s_out);
+//$suap = new Suap ('20132014050548', "nvidia@geforce+I7");
+$suap = new Suap ('20141014050520', "metron.550");
+$tools = ['handler'=>$hand, 'suap'=>$suap];
+
+$sit = new Situacao($tools);
+$sit->get_situacao($matricula, $diario);
+?>

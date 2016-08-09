@@ -1,0 +1,106 @@
+<?php
+//$time_start = microtime(true);
+require_once dirname(dirname(__FILE__)).DIRECTORY_SEPARATOR.'utils'.DIRECTORY_SEPARATOR.'php-html-parser'.DIRECTORY_SEPARATOR.'vendor'.DIRECTORY_SEPARATOR.'autoload.php';
+use PHPHtmlParser\Dom;
+
+class MenuBasic
+{
+    private $suap;
+    private $handler;
+    public function __construct($tools)
+    {
+        $this->suap = $tools['suap'];
+        $this->handler = $tools['handler'];
+    }
+
+    public function parserInfo($html)
+    {
+        $diarios = array();
+        $codes = array();
+        $disciplinas = array();
+        $dom = new Dom();
+        $dom->load($html);
+        $contents = $dom->find('.borda');
+        $tt = $contents->find('tbody');
+        $new = $tt->find('tr');
+
+        foreach ($new as $key) {
+            $diario = $key->find('td')[0];
+            $diario = $diario->text;
+            $class = $key->find('td')[1];
+            $sit = $key->find('td')[6];
+            $situacao = $sit->text;
+            if ($situacao != 'Transferido' || $situacao != 'Cancelado') {
+                $convert = $class->text."\n";
+                $bora = explode(' - ', $convert, 2);
+                $teste = split('[/.-]', $bora[0]);
+                array_push($codes, $teste[1]);
+                array_push($disciplinas, $bora[1]);
+                array_push($diarios, $diario);
+            }
+        }
+        $coe = array_combine($codes, $disciplinas);
+        $max = range(1, count($diarios));
+        $new_diarios = array_combine($max, $diarios);
+        $newinfos = ['infos' => $coe, 'diarios' => $new_diarios];
+
+        return $newinfos;
+    }
+
+    public function getInfo($mat)
+    {
+	$this->handler->log_agi("ENTROU NO GETINFO");
+        $get = $this->suap->consume('https://suap.ifrn.edu.br/edu/aluno/'.$mat.'/?tab=boletim');
+        $t = $this->parserInfo($get);
+        $make = $this->makeMenu($t);
+        return $make;
+    }
+
+    public function makeMenu($info)
+    {
+        $max = count($info['infos']);
+        $i = 1;
+        //$this->handler->execute_agi('ANSWER');
+        foreach ($info['infos'] as $key => $value) {
+            $y = $this->handler->execute_agi("EXEC Background \"grupo2/$i&grupo2/disc&grupo2/mat/$key\"");
+            $y = $this->handler->execute_agi("EXEC WaitExten \"2\"");
+            $num = $y['result'] - 48;
+
+            //$this->handler->log_agi("$num");
+
+            if (++$i == $x) {
+                break;
+            }
+            if ($info['diarios'][$num]) {
+              $code = $info['diarios'][$num];
+              return $code;
+            }
+        }
+        $this->handler->execute_agi("STREAM FILE grupo2/0 \"\"");
+        $this->handler->execute_agi("STREAM FILE grupo2/final \"\"");
+        //$this->handler->execute_agi('HANGUP');
+    }
+
+    public function getOpMenu($mat)
+    {
+        $this->handler->execute_agi("EXEC BACKGROUND \"digits/1&digits/2&digits/3&digits/0\"");
+	$data = $this->handler->execute_agi("GET DATA beep 3000 2");
+	$opc = 123;	
+	$opc = 'op'.$data['result'];
+	$this->handler->log_agi('==='.$opc.'===');
+	
+	if($opc=='op1'|$opc=='op2'|$opc=='op3') {
+	    return $opc;
+	    break;	
+	}elseif ($opc=='op0'|$opc=='op'){
+		$this->handler->log_agi('REPETE A DISCIPLINA!!!');
+		$this->getInfo($mat);
+		break;
+	}else{
+		$this->handler->log_agi('ADEUS!!!');
+		$this->handler->endConversation();
+		break;
+	}
+    }
+}
+?>
